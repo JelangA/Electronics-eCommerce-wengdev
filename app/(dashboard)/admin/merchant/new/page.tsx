@@ -27,37 +27,36 @@ export default function NewMerchantPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast.error("Merchant name is required");
-      return;
+        toast.error("Merchant name is required");
+        return;
     }
     
     setIsSubmitting(true);
     
     try {
-      const response = await apiClient.post("/api/merchants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+        // Fix: Pass the form data directly rather than in a configuration object
+        const response = await apiClient.post("/api/merchants", formData);
 
-      if (!response.ok) {
-        throw new Error("Failed to create merchant");
-      }
+        if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server error:", errorData);
+        throw new Error(errorData.error || "Failed to create merchant");
+        }
 
-      const data = await response.json();
-      toast.success("Merchant created successfully");
-      router.push(`/admin/merchant/${data.id}`);
+        const data = await response.json();
+        toast.success("Merchant created successfully");
+        router.push(`/admin/merchant/${data.id}`);
     } catch (error) {
-      console.error("Error creating merchant:", error);
-      toast.error("Failed to create merchant");
+        console.error("Error creating merchant:", error);
+        toast.error("Failed to create merchant");
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   return (
     <div className="flex h-screen">
